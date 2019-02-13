@@ -10,6 +10,14 @@ repository = "https://github.com/netology-group/svc-authn-rs"
 license = "MIT"
 edition = "2018"
 
+[badges]
+travis-ci = { repository = "netology-group/svc-authn-rs" }
+
+[features]
+default = []
+bearer = ["http"]
+jose = ["bearer", "chrono", "jsonwebtoken"]
+
 [dependencies]
 failure = "0.1"
 serde = "1.0"
@@ -19,8 +27,3 @@ chrono = { version = "0.4", features = ["serde"], optional = true }
 diesel = { version = "1.4", features = ["postgres"], optional = true }
 tower-web = { version = "0.3", optional = true }
 http = { version = "0.1", optional = true }
-
-[features]
-default = []
-bearer = ["http"]
-jose = ["bearer", "chrono", "jsonwebtoken"]
