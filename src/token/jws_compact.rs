@@ -3,17 +3,17 @@ use failure::{err_msg, format_err, Error};
 use jsonwebtoken::{encode, Algorithm, Header};
 
 use crate::jose::{Claims, ConfigMap};
-use crate::Authenticable;
+use crate::{AccountId, Authenticable};
 
 ////////////////////////////////////////////////////////////////////////////////
 
 #[derive(Debug)]
 pub struct TokenBuilder<'a> {
     issuer: Option<&'a str>,
-    subject: Option<&'a dyn Authenticable>,
+    subject: Option<&'a AccountId>,
 
     expires_in: Option<i64>,
-    algorithm: Option<&'a Algorithm>,
+    algorithm: Option<Algorithm>,
     key: Option<&'a [u8]>,
 }
 
@@ -38,10 +38,13 @@ impl<'a> TokenBuilder<'a> {
         }
     }
 
-    pub fn subject(self, value: &'a dyn Authenticable) -> Self {
+    pub fn subject<A>(self, value: &'a A) -> Self
+    where
+        A: Authenticable,
+    {
         Self {
             issuer: self.issuer,
-            subject: Some(value),
+            subject: Some(value.account_id()),
             expires_in: self.expires_in,
             algorithm: self.algorithm,
             key: self.key,
@@ -58,7 +61,7 @@ impl<'a> TokenBuilder<'a> {
         }
     }
 
-    pub fn key(self, algorithm: &'a Algorithm, key: &'a [u8]) -> Self {
+    pub fn key(self, algorithm: Algorithm, key: &'a [u8]) -> Self {
         Self {
             issuer: self.issuer,
             subject: self.subject,
@@ -74,15 +77,17 @@ impl<'a> TokenBuilder<'a> {
         let algorithm = self.algorithm.ok_or_else(|| err_msg("missing algorithm"))?;
         let key = self.key.ok_or_else(|| err_msg("missing key"))?;
 
-        let claims = Claims::new(
+        let mut claims = Claims::new(
             issuer,
             subject.account_id().audience(),
             subject.account_id().label(),
-            self.expires_in
-                .map(|val| (Utc::now() + Duration::seconds(val)).timestamp() as u64),
         );
 
-        encode(&Header::new(*algorithm), &claims, key)
+        if let Some(value) = self.expires_in {
+            claims.set_expiration_time((Utc::now() + Duration::seconds(value)).timestamp() as u64);
+        }
+
+        encode(&Header::new(algorithm), &claims, key)
             .map_err(|err| format_err!("encoding error – {}", err))
     }
 }
@@ -124,7 +129,7 @@ pub mod extract {
             ));
         }
 
-        let mut verifier = Validation::new(*config.algorithm());
+        let mut verifier = Validation::new(config.algorithm());
         verifier.validate_exp = parts.claims.expiration_time().is_some();
 
         decode_jws_compact(token, &verifier, config.key().as_ref())
