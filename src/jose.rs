@@ -18,8 +18,8 @@ impl Config {
         &self.audience
     }
 
-    pub fn algorithm(&self) -> &Algorithm {
-        &self.algorithm
+    pub fn algorithm(&self) -> Algorithm {
+        self.algorithm
     }
 
     pub fn key(&self) -> &Vec<u8> {
@@ -39,6 +39,20 @@ pub struct Claims<T> {
 }
 
 impl<T> Claims<T> {
+    pub fn new(iss: &str, aud: &str, sub: T) -> Self {
+        Self {
+            iss: iss.to_owned(),
+            aud: aud.to_owned(),
+            sub,
+            exp: None,
+        }
+    }
+
+    pub fn set_expiration_time(&mut self, value: u64) -> &mut Self {
+        self.exp = Some(value);
+        self
+    }
+
     pub fn issuer(&self) -> &str {
         &self.iss
     }
@@ -53,14 +67,5 @@ impl<T> Claims<T> {
 
     pub fn expiration_time(&self) -> Option<u64> {
         self.exp
-    }
-
-    pub fn new(iss: &str, aud: &str, sub: T, exp: Option<u64>) -> Self {
-        Self {
-            iss: iss.to_owned(),
-            aud: aud.to_owned(),
-            sub,
-            exp,
-        }
     }
 }
