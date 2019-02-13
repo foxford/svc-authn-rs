@@ -7,7 +7,7 @@ use crate::Authenticable;
 
 ////////////////////////////////////////////////////////////////////////////////
 
-#[derive(Debug, Clone, Deserialize, Serialize)]
+#[derive(Debug, Clone, PartialEq, Deserialize, Serialize)]
 #[cfg_attr(feature = "diesel", derive(FromSqlRow, AsExpression))]
 #[cfg_attr(feature = "diesel", sql_type = "sql::Account_id")]
 pub struct AccountId {
