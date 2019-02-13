@@ -44,7 +44,7 @@ impl<'a> TokenBuilder<'a> {
     {
         Self {
             issuer: self.issuer,
-            subject: Some(value.account_id()),
+            subject: Some(value.as_account_id()),
             expires_in: self.expires_in,
             algorithm: self.algorithm,
             key: self.key,
@@ -79,8 +79,8 @@ impl<'a> TokenBuilder<'a> {
 
         let mut claims = Claims::new(
             issuer,
-            subject.account_id().audience(),
-            subject.account_id().label(),
+            subject.as_account_id().audience(),
+            subject.as_account_id().label(),
         );
 
         if let Some(value) = self.expires_in {

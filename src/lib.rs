@@ -5,7 +5,7 @@ extern crate diesel;
 use std::fmt;
 
 pub trait Authenticable: Sync + Send {
-    fn account_id(&self) -> &AccountId;
+    fn as_account_id(&self) -> &AccountId;
 }
 
 impl fmt::Debug for &dyn Authenticable {

@@ -54,7 +54,7 @@ impl FromStr for AccountId {
 }
 
 impl Authenticable for AccountId {
-    fn account_id(&self) -> &Self {
+    fn as_account_id(&self) -> &Self {
         self
     }
 }
