@@ -4,7 +4,7 @@ use std::collections::{HashMap, HashSet};
 
 pub type ConfigMap = HashMap<String, Config>;
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Clone, Deserialize)]
 pub struct Config {
     audience: HashSet<String>,
     #[serde(deserialize_with = "crate::serde::algorithm")]
