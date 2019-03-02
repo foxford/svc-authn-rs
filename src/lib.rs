@@ -24,7 +24,5 @@ pub mod sql {
 }
 mod account;
 
+pub mod serde;
 pub mod token;
-
-#[cfg(feature = "jose")]
-pub(crate) mod serde;

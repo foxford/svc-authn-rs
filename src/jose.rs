@@ -69,3 +69,42 @@ impl<T> Claims<T> {
         self.exp
     }
 }
+
+////////////////////////////////////////////////////////////////////////////////
+
+pub mod serde {
+    use jsonwebtoken::Algorithm;
+    use serde::de::{Deserializer, Error, Unexpected, Visitor};
+    use std::fmt;
+
+    ////////////////////////////////////////////////////////////////////////////////
+
+    struct AlgorithmVisitor;
+
+    impl<'de> Visitor<'de> for AlgorithmVisitor {
+        type Value = Algorithm;
+
+        fn expecting(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
+            write!(
+                formatter,
+                "a name of signature or MAC algorithm specified in RFC7518: JSON Web Algorithms (JWA)"
+            )
+        }
+
+        fn visit_str<E>(self, v: &str) -> Result<Self::Value, E>
+        where
+            E: Error,
+        {
+            use std::str::FromStr;
+
+            Algorithm::from_str(v).map_err(|_| Error::invalid_value(Unexpected::Str(v), &self))
+        }
+    }
+
+    pub fn algorithm<'de, D>(deserializer: D) -> Result<Algorithm, D::Error>
+    where
+        D: Deserializer<'de>,
+    {
+        deserializer.deserialize_str(AlgorithmVisitor)
+    }
+}

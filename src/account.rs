@@ -1,5 +1,4 @@
 use failure::{format_err, Error};
-use serde_derive::{Deserialize, Serialize};
 use std::fmt;
 use std::str::FromStr;
 
@@ -7,7 +6,7 @@ use crate::Authenticable;
 
 ////////////////////////////////////////////////////////////////////////////////
 
-#[derive(Debug, Clone, PartialEq, Deserialize, Serialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
 #[cfg_attr(feature = "diesel", derive(FromSqlRow, AsExpression))]
 #[cfg_attr(feature = "diesel", sql_type = "sql::Account_id")]
 pub struct AccountId {
@@ -125,7 +124,6 @@ mod tower_web {
 
 #[cfg(feature = "diesel")]
 pub mod sql {
-
     use diesel::deserialize::{self, FromSql};
     use diesel::pg::Pg;
     use diesel::serialize::{self, Output, ToSql, WriteTuple};
@@ -152,5 +150,51 @@ pub mod sql {
             Ok(AccountId::new(&label, &audience))
         }
     }
+}
 
+////////////////////////////////////////////////////////////////////////////////
+
+mod serde {
+    use serde::{de, ser};
+    use std::fmt;
+
+    use super::AccountId;
+
+    impl ser::Serialize for AccountId {
+        fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+        where
+            S: ser::Serializer,
+        {
+            serializer.serialize_str(&self.to_string())
+        }
+    }
+
+    impl<'de> de::Deserialize<'de> for AccountId {
+        fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+        where
+            D: de::Deserializer<'de>,
+        {
+            struct AccountIdVisitor;
+
+            impl<'de> de::Visitor<'de> for AccountIdVisitor {
+                type Value = AccountId;
+
+                fn expecting(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
+                    formatter.write_str("struct AccountId")
+                }
+
+                fn visit_str<E>(self, v: &str) -> Result<Self::Value, E>
+                where
+                    E: de::Error,
+                {
+                    use std::str::FromStr;
+
+                    AccountId::from_str(v)
+                        .map_err(|_| de::Error::invalid_value(de::Unexpected::Str(v), &self))
+                }
+            }
+
+            deserializer.deserialize_str(AccountIdVisitor)
+        }
+    }
 }
