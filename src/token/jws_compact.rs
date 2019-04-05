@@ -1,8 +1,10 @@
 use chrono::{Duration, Utc};
-use failure::{err_msg, format_err, Error};
 use jsonwebtoken::{encode, Algorithm, Header};
+use std::error::Error as StdError;
+use std::fmt::{self, Display};
 
 use crate::jose::{Claims, ConfigMap};
+use crate::SerializationError;
 use crate::{AccountId, Authenticable};
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -71,11 +73,19 @@ impl<'a> TokenBuilder<'a> {
         }
     }
 
-    pub fn build(self) -> Result<String, Error> {
-        let issuer = self.issuer.ok_or_else(|| err_msg("invalid issuer"))?;
-        let subject = self.subject.ok_or_else(|| err_msg("missing subject"))?;
-        let algorithm = self.algorithm.ok_or_else(|| err_msg("missing algorithm"))?;
-        let key = self.key.ok_or_else(|| err_msg("missing key"))?;
+    pub fn build(self) -> Result<String, SerializationError> {
+        let issuer = self
+            .issuer
+            .ok_or_else(|| SerializationError::new("invalid issuer"))?;
+        let subject = self
+            .subject
+            .ok_or_else(|| SerializationError::new("missing subject"))?;
+        let algorithm = self
+            .algorithm
+            .ok_or_else(|| SerializationError::new("missing algorithm"))?;
+        let key = self
+            .key
+            .ok_or_else(|| SerializationError::new("missing key"))?;
 
         let mut claims = Claims::new(
             issuer,
@@ -88,19 +98,19 @@ impl<'a> TokenBuilder<'a> {
         }
 
         encode(&Header::new(algorithm), &claims, key)
-            .map_err(|err| format_err!("encoding error – {}", err))
+            .map_err(|e| SerializationError::new(&format!("encoding error, {}", e)))
     }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
 pub mod extract {
-    use failure::{err_msg, format_err, Error};
     use http::header::HeaderValue;
     use jsonwebtoken::{decode, TokenData, Validation};
 
     use super::{Claims, ConfigMap};
     use crate::token::bearer::extract::parse_bearer_token;
+    use crate::Error;
 
     pub fn extract_jws_compact<T>(
         header: &HeaderValue,
@@ -112,10 +122,10 @@ pub mod extract {
         let token = parse_bearer_token(header)?;
         let parts = parse_jws_compact::<T>(token)?;
         let config = authn.get(parts.claims.issuer()).ok_or_else(|| {
-            format_err!(
+            Error::new(&format!(
                 "issuer = {} of the authentication token is not allowed",
                 parts.claims.issuer(),
-            )
+            ))
         })?;
 
         // NOTE: we consider the token valid if its audience matches at least
@@ -123,10 +133,10 @@ pub mod extract {
         // We can't use 'verifier.set_audience(&config.audience)' because it's
         // succeed if only all values from the config represented in the token.
         if !config.audience().contains(parts.claims.audience()) {
-            return Err(format_err!(
+            return Err(Error::new(&format!(
                 "audience = {} of the authentication token is not allowed",
                 parts.claims.audience(),
-            ));
+            )));
         }
 
         let mut verifier = Validation::new(config.algorithm());
@@ -144,10 +154,10 @@ pub mod extract {
         T: serde::de::DeserializeOwned,
     {
         decode(token, key, &verifier).map_err(|err| {
-            format_err!(
+            Error::new(&format!(
                 "verification of the authentication token failed – {}",
                 &err,
-            )
+            ))
         })
     }
 
@@ -156,6 +166,6 @@ pub mod extract {
         T: serde::de::DeserializeOwned,
     {
         jsonwebtoken::dangerous_unsafe_decode(token)
-            .map_err(|_| err_msg("invalid claims of the authentication token"))
+            .map_err(|_| Error::new("invalid claims of the authentication token"))
     }
 }

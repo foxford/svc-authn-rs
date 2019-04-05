@@ -24,5 +24,7 @@ pub mod sql {
 }
 mod account;
 
+pub use self::error::{Error, SerializationError};
+pub mod error;
 pub mod serde;
 pub mod token;

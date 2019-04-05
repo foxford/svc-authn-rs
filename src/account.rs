@@ -1,8 +1,8 @@
-use failure::{format_err, Error};
 use std::fmt;
 use std::str::FromStr;
 
 use crate::Authenticable;
+use crate::Error;
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -44,10 +44,10 @@ impl FromStr for AccountId {
         let parts: Vec<&str> = val.splitn(2, '.').collect();
         match parts[..] {
             [ref label, ref audience] => Ok(Self::new(label, audience)),
-            _ => Err(format_err!(
+            _ => Err(Error::new(&format!(
                 "invalid value for the application name: {}",
                 val
-            )),
+            ))),
         }
     }
 }
