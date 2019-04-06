@@ -1,7 +1,5 @@
 use chrono::{Duration, Utc};
 use jsonwebtoken::{encode, Algorithm, Header};
-use std::error::Error as StdError;
-use std::fmt::{self, Display};
 
 use crate::jose::{Claims, ConfigMap};
 use crate::SerializationError;
