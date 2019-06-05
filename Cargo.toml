@@ -21,7 +21,7 @@ jose = ["bearer", "chrono", "jsonwebtoken"]
 [dependencies]
 serde = "1.0"
 serde_derive = "1.0"
-jsonwebtoken = { version = "5.0", optional = true }
+jsonwebtoken = { version = "6.0", optional = true }
 chrono = { version = "0.4", features = ["serde"], optional = true }
 diesel = { version = "1.4", features = ["postgres"], optional = true }
 tower-web = { version = "0.3", optional = true }

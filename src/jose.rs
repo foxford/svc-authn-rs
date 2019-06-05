@@ -1,4 +1,3 @@
-use jsonwebtoken::Algorithm;
 use serde_derive::{Deserialize, Serialize};
 use std::collections::{HashMap, HashSet};
 
@@ -108,3 +107,7 @@ pub mod serde {
         deserializer.deserialize_str(AlgorithmVisitor)
     }
 }
+
+////////////////////////////////////////////////////////////////////////////////
+
+pub use jsonwebtoken::Algorithm;
