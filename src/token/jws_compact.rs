@@ -117,7 +117,17 @@ pub mod extract {
     where
         T: serde::de::DeserializeOwned,
     {
-        let token = parse_bearer_token(header)?;
+        parse_bearer_token(header)
+            .and_then(|token| decode_jws_compact_with_config::<T>(token, authn))
+    }
+
+    pub fn decode_jws_compact_with_config<T>(
+        token: &str,
+        authn: &ConfigMap,
+    ) -> Result<TokenData<Claims<T>>, Error>
+    where
+        T: serde::de::DeserializeOwned,
+    {
         let parts = parse_jws_compact::<T>(token)?;
         let config = authn.get(parts.claims.issuer()).ok_or_else(|| {
             Error::new(&format!(

@@ -95,15 +95,13 @@ mod tower_web {
                     .config::<ConfigMap>()
                     .expect("missing an authn config");
                 match context.request().headers().get(http::header::AUTHORIZATION) {
-                    Some(header) => match extract_jws_compact::<String>(&header, authn) {
+                    Some(header) => match extract_jws_compact::<String>(header, authn) {
                         Ok(data) => Immediate::ok(data.claims.into()),
                         Err(ref err) => {
                             Immediate::err(error(&err.to_string(), StatusCode::UNAUTHORIZED))
                         }
                     },
-                    None => {
-                        Immediate::err(Error::missing_argument())
-                    }
+                    None => Immediate::err(Error::missing_argument()),
                 }
             }
         }
