@@ -1,0 +1,13 @@
+expires_in = 86400 # default expiration for token
+
+[audience."foo.services"]
+iss = "foo.services" # token issuer
+algorithm = "ES256"  # token algorithm
+sign_key = "/path/to/keys/foo.private_key.p8.der.sample"    # key to sign new tokens
+verify_key = "/path/to/keys/foo.public_key.p8.der.sample"   # key to verify tokens
+
+[audience."bar.services"]
+iss = "bar.services"
+algorithm = "HS256"
+sign_key = "/path/to/keys/bar.private_key.p8.der.sample"
+verify_key = "/path/to/keys/bar.public_key.p8.der.sample"
