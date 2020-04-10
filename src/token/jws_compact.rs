@@ -7,7 +7,7 @@ use crate::{AccountId, Authenticable};
 
 ////////////////////////////////////////////////////////////////////////////////
 
-#[derive(Debug)]
+#[derive(Debug, Default)]
 pub struct TokenBuilder<'a> {
     issuer: Option<&'a str>,
     subject: Option<&'a AccountId>,
@@ -19,13 +19,7 @@ pub struct TokenBuilder<'a> {
 
 impl<'a> TokenBuilder<'a> {
     pub fn new() -> Self {
-        Self {
-            issuer: None,
-            subject: None,
-            expires_in: None,
-            algorithm: None,
-            key: None,
-        }
+        Default::default()
     }
 
     pub fn issuer(self, value: &'a str) -> Self {
