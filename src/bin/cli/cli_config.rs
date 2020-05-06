@@ -56,7 +56,7 @@ impl CliConfig {
                     })?;
 
                     return Err(format!(
-                        "Created a config for you at {}\nBut you must add some audiences",
+                        "Created a config for you at {}\nBut you must add some audiences, exiting.",
                         DEFAULT_CONFIG_FILE
                     ));
                 }

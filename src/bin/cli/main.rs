@@ -14,7 +14,16 @@ use cli_config::CliConfig;
 use extract_expiry::extract_expiry;
 use options::{Operation, Opt};
 
-fn main() -> Result<(), String> {
+fn main() {
+    let result = run();
+
+    if let Err(e) = result {
+        eprintln!("{}", e);
+        std::process::exit(1);
+    }
+}
+
+fn run() -> Result<(), String> {
     let opt = Opt::from_args();
 
     match opt.op {
