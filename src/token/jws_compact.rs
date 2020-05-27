@@ -1,5 +1,5 @@
 use chrono::{Duration, Utc};
-use jsonwebtoken::{encode, Algorithm, Header};
+use jsonwebtoken::{encode, Algorithm, EncodingKey, Header};
 
 use crate::jose::{Claims, ConfigMap};
 use crate::SerializationError;
@@ -89,7 +89,16 @@ impl<'a> TokenBuilder<'a> {
             claims.set_expiration_time((Utc::now() + Duration::seconds(value)).timestamp() as u64);
         }
 
-        encode(&Header::new(algorithm), &claims, key)
+        let encoding_key = match algorithm {
+            Algorithm::HS256 => Ok(EncodingKey::from_secret(key)),
+            Algorithm::ES256 => Ok(EncodingKey::from_ec_der(key)),
+            _ => Err(SerializationError::new(&format!(
+                "unsupported algorithm {:?}",
+                algorithm,
+            ))),
+        }?;
+
+        encode(&Header::new(algorithm), &claims, &encoding_key)
             .map_err(|e| SerializationError::new(&format!("encoding error, {}", e)))
     }
 }
@@ -98,7 +107,7 @@ impl<'a> TokenBuilder<'a> {
 
 pub mod extract {
     use http::header::HeaderValue;
-    use jsonwebtoken::{decode, TokenData, Validation};
+    use jsonwebtoken::{decode, Algorithm, DecodingKey, TokenData, Validation};
 
     use super::{Claims, ConfigMap};
     use crate::token::bearer::extract::parse_bearer_token;
@@ -144,18 +153,28 @@ pub mod extract {
         let mut verifier = Validation::new(config.algorithm());
         verifier.validate_exp = parts.claims.expiration_time().is_some();
 
-        decode_jws_compact(token, &verifier, config.key().as_ref())
+        decode_jws_compact(token, &verifier, config.key().as_ref(), config.algorithm())
     }
 
     pub fn decode_jws_compact<T>(
         token: &str,
         verifier: &Validation,
         key: &[u8],
+        algorithm: Algorithm,
     ) -> Result<TokenData<Claims<T>>, Error>
     where
         T: serde::de::DeserializeOwned,
     {
-        decode(token, key, &verifier).map_err(|err| {
+        let decoding_key = match algorithm {
+            Algorithm::HS256 => Ok(DecodingKey::from_secret(key)),
+            Algorithm::ES256 => Ok(DecodingKey::from_ec_der(key)),
+            _ => Err(Error::new(&format!(
+                "unsupported algorithm {:?}",
+                algorithm
+            ))),
+        }?;
+
+        decode(token, &decoding_key, &verifier).map_err(|err| {
             Error::new(&format!(
                 "verification of the authentication token failed – {}",
                 &err,
