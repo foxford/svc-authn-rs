@@ -78,7 +78,7 @@ fn sign(
     let audience_config = &config
         .audience
         .get(&audience)
-        .ok_or_else(|| format!("Couldnt find audience: {} in config", account_id))?;
+        .ok_or_else(|| format!("Couldn't find audience: {} in config", audience))?;
 
     let token = TokenBuilder::new()
         .issuer(&audience_config.iss)
@@ -112,7 +112,7 @@ fn verify(token: &str, config: &CliConfig) -> Result<(), String> {
     let audience_config = &config
         .audience
         .get(claims_audience)
-        .ok_or_else(|| format!("Couldnt find audience: {} in config", claims_audience))?;
+        .ok_or_else(|| format!("Couldn't find audience: {} in config", claims_audience))?;
 
     let verifier = Validation {
         iss: Some(audience_config.iss.clone()),
@@ -121,7 +121,7 @@ fn verify(token: &str, config: &CliConfig) -> Result<(), String> {
     };
 
     let valid_token: TokenData<Claims<String>> =
-        extract::decode_jws_compact(token, &verifier, &audience_config.verify_key)
+        extract::decode_jws_compact(token, &verifier, &audience_config.verify_key, audience_config.algorithm)
             .map_err(|err| format!("Failed to decode token: {}", err))?;
 
     let expires_at = valid_token
