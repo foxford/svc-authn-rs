@@ -2,7 +2,6 @@ use std::str::FromStr;
 
 use atty::Stream;
 use jsonwebtoken::TokenData;
-use serde_json;
 use structopt::StructOpt;
 use svc_authn::{
     jose::Claims,
@@ -120,9 +119,13 @@ fn verify(token: &str, config: &CliConfig) -> Result<(), String> {
         ..Validation::default()
     };
 
-    let valid_token: TokenData<Claims<String>> =
-        extract::decode_jws_compact(token, &verifier, &audience_config.verify_key, audience_config.algorithm)
-            .map_err(|err| format!("Failed to decode token: {}", err))?;
+    let valid_token: TokenData<Claims<String>> = extract::decode_jws_compact(
+        token,
+        &verifier,
+        &audience_config.verify_key,
+        audience_config.algorithm,
+    )
+    .map_err(|err| format!("Failed to decode token: {}", err))?;
 
     let expires_at = valid_token
         .claims

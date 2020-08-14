@@ -186,7 +186,7 @@ pub mod extract {
     where
         T: serde::de::DeserializeOwned,
     {
-        jsonwebtoken::dangerous_unsafe_decode(token)
+        jsonwebtoken::dangerous_insecure_decode(token)
             .map_err(|_| Error::new("invalid claims of the authentication token"))
     }
 }

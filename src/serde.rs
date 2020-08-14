@@ -21,7 +21,7 @@ impl<'de> Visitor<'de> for FileVisitor {
 
         let mut data = Vec::new();
         File::open(v)
-            .and_then(|mut file| file.read_to_end(&mut data).and_then(|_| Ok(data)))
+            .and_then(|mut file| file.read_to_end(&mut data).map(|_| data))
             .map_err(|_| Error::invalid_value(Unexpected::Str(v), &self))
     }
 }
