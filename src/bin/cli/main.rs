@@ -107,6 +107,7 @@ fn verify(token: &str, config: &CliConfig) -> Result<(), String> {
         .map_err(|err| format!("Error decoding token: {}", err))?;
     let claims = nonvalidated_token.claims;
     let claims_audience = claims.audience().splitn(2, ':').collect::<Vec<&str>>()[0];
+    let has_exp_claim = !claims.expiration_time().is_none();
 
     let audience_config = &config
         .audience
@@ -116,6 +117,7 @@ fn verify(token: &str, config: &CliConfig) -> Result<(), String> {
     let verifier = Validation {
         iss: Some(audience_config.iss.clone()),
         algorithms: vec![audience_config.algorithm],
+        validate_exp: has_exp_claim,
         ..Validation::default()
     };
 
@@ -127,18 +129,21 @@ fn verify(token: &str, config: &CliConfig) -> Result<(), String> {
     )
     .map_err(|err| format!("Failed to decode token: {}", err))?;
 
-    let expires_at = valid_token
-        .claims
-        .expiration_time()
-        .ok_or_else(|| format!("Absent expiration date: {:?}", valid_token.claims))?;
-    let expires_at = Utc.timestamp(expires_at as i64, 0);
-    let dur = DateTime::signed_duration_since(expires_at, Utc::now());
-
-    if atty::is(Stream::Stdout) {
-        println!(
-            "Verification passed, token valid for {} seconds",
-            dur.num_seconds()
-        );
+    if has_exp_claim {
+        let expires_at = valid_token
+            .claims
+            .expiration_time()
+            .ok_or_else(|| format!("Absent expiration date: {:?}", valid_token.claims))?;
+        let expires_at = Utc.timestamp(expires_at as i64, 0);
+        let dur = DateTime::signed_duration_since(expires_at, Utc::now());
+        if atty::is(Stream::Stdout) {
+            println!(
+                "Verification passed, token valid for {} seconds",
+                dur.num_seconds()
+            );
+        }
+    } else {
+        println!("Verification passed, token never expires");
     }
 
     Ok(())
