@@ -143,7 +143,11 @@ pub mod extract {
         // one audience from the app config for the same issuer.
         // We can't use 'verifier.set_audience(&config.audience)' because it's
         // succeed if only all values from the config represented in the token.
-        if !config.audience().contains(parts.claims.audience()) {
+        //
+        // If audience is in format '{audience1}:{audience2}' we check first audience
+        // Split will always return at least one part
+        let audience = parts.claims.audience().split(':').next().unwrap();
+        if !config.audience().contains(audience) {
             return Err(Error::new(&format!(
                 "audience = {} of the authentication token is not allowed",
                 parts.claims.audience(),
