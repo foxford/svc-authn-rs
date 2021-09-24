@@ -74,54 +74,6 @@ pub mod jose {
     }
 }
 
-////////////////////////////////////////////////////////////////////////////////
-
-#[cfg(all(feature = "tower-web", feature = "jose"))]
-mod tower_web {
-    use super::AccountId;
-
-    mod extract {
-        use http::StatusCode;
-        use tower_web::extract::{Context, Error, Extract, Immediate};
-        use tower_web::util::BufStream;
-
-        use super::AccountId;
-        use crate::jose::ConfigMap;
-        use crate::token::jws_compact::extract::extract_jws_compact;
-
-        impl<B: BufStream> Extract<B> for AccountId {
-            type Future = Immediate<AccountId>;
-
-            fn extract(context: &Context) -> Self::Future {
-                let authn = context
-                    .config::<ConfigMap>()
-                    .expect("missing an authn config");
-                match context.request().headers().get(http::header::AUTHORIZATION) {
-                    Some(header) => match extract_jws_compact::<String>(header, authn) {
-                        Ok(data) => Immediate::ok(data.claims.into()),
-                        Err(ref err) => {
-                            Immediate::err(error(&err.to_string(), StatusCode::UNAUTHORIZED))
-                        }
-                    },
-                    None => Immediate::err(Error::missing_argument()),
-                }
-            }
-        }
-
-        fn error(detail: &str, status: StatusCode) -> Error {
-            let mut err = tower_web::Error::new(
-                "authn_error",
-                "Error processing the authentication token",
-                status,
-            );
-            err.set_detail(detail);
-            err.into()
-        }
-    }
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
 #[cfg(feature = "diesel")]
 pub mod sql {
     use diesel::deserialize::{self, FromSql};
