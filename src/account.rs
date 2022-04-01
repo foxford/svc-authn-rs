@@ -45,7 +45,7 @@ impl FromStr for AccountId {
     fn from_str(val: &str) -> Result<Self, Self::Err> {
         let parts: Vec<&str> = val.splitn(2, '.').collect();
         match parts[..] {
-            [ref label, ref audience] => Ok(Self::new(label, audience)),
+            [label, audience] => Ok(Self::new(label, audience)),
             _ => Err(Error::new(&format!(
                 "invalid value for the application name: {}",
                 val

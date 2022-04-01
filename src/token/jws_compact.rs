@@ -178,7 +178,7 @@ pub mod extract {
             ))),
         }?;
 
-        decode(token, &decoding_key, &verifier).map_err(|err| {
+        decode(token, &decoding_key, verifier).map_err(|err| {
             Error::new(&format!(
                 "verification of the authentication token failed – {}",
                 &err,
