@@ -38,7 +38,7 @@ pub mod extract {
             .collect();
 
         match val[..] {
-            ["Bearer", ref val] => Ok(val),
+            ["Bearer", val] => Ok(val),
             _ => Err(Error::new(
                 "unsupported or invalid type of the authentication token",
             )),

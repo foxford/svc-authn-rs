@@ -107,7 +107,7 @@ fn verify(token: &str, config: &CliConfig) -> Result<(), String> {
         .map_err(|err| format!("Error decoding token: {}", err))?;
     let claims = nonvalidated_token.claims;
     let claims_audience = claims.audience().splitn(2, ':').collect::<Vec<&str>>()[0];
-    let has_exp_claim = !claims.expiration_time().is_none();
+    let has_exp_claim = claims.expiration_time().is_some();
 
     let audience_config = &config
         .audience
