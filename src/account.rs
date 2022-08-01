@@ -10,7 +10,7 @@ use crate::Error;
 #[cfg_attr(feature = "diesel", derive(FromSqlRow, AsExpression))]
 #[cfg_attr(feature = "diesel", sql_type = "sql::Account_id")]
 #[cfg_attr(feature = "sqlx", derive(sqlx::Type))]
-#[cfg_attr(feature = "sqlx", sqlx(rename = "account_id"))]
+#[cfg_attr(feature = "sqlx", sqlx(type_name = "account_id"))]
 pub struct AccountId {
     label: String,
     audience: String,
