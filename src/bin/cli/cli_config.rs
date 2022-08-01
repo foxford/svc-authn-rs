@@ -64,12 +64,14 @@ impl CliConfig {
             }
         };
 
-        let mut settings = config::Config::default();
+        let builder = config::Config::builder();
+        let settings = builder
+            .add_source(config::File::from(path))
+            .build()
+            .map_err(|e| format!("Failed to read config: {}", e))?;
+
         settings
-            .merge(config::File::from(path))
-            .map_err(|err| format!("Failed to read config: {}", err))?;
-        settings
-            .try_into()
-            .map_err(|err| format!("Failed to deserialize config: {}", err))
+            .try_deserialize()
+            .map_err(|e| format!("Failed to deserialize config: {}", e))
     }
 }
