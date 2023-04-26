@@ -9,6 +9,7 @@ use svc_authn::{
     AccountId,
 };
 
+use chrono::offset::LocalResult;
 use cli_config::CliConfig;
 use extract_expiry::extract_expiry;
 use options::{Operation, Opt};
@@ -134,7 +135,18 @@ fn verify(token: &str, config: &CliConfig) -> Result<(), String> {
             .claims
             .expiration_time()
             .ok_or_else(|| format!("Absent expiration date: {:?}", valid_token.claims))?;
-        let expires_at = Utc.timestamp(expires_at as i64, 0);
+        let expires_at = match Utc.timestamp_opt(expires_at as i64, 0) {
+            LocalResult::None => return Err(
+                "Utc.timestamp_opt Err: out-of-range number of seconds and/or invalid nanosecond"
+                    .to_string(),
+            ),
+            LocalResult::Ambiguous(_, _) => {
+                return Err(
+                    "Utc.timestamp_opt Err: unexpected result LocalResult::Ambiguous".to_string(),
+                )
+            }
+            LocalResult::Single(x) => x,
+        };
         let dur = DateTime::signed_duration_since(expires_at, Utc::now());
         if atty::is(Stream::Stdout) {
             println!(

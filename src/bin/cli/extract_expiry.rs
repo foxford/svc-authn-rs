@@ -19,7 +19,10 @@ pub(crate) fn extract_expiry(
                 Err(_) => match NaiveDateTime::parse_from_str(ts, "%Y-%m-%d %H:%M") {
                     Ok(t) => t,
                     Err(_) => match NaiveDate::parse_from_str(ts, "%Y-%m-%d") {
-                        Ok(t) => t.and_hms(0, 0, 0),
+                        Ok(t) => match t.and_hms_opt(0, 0, 0) {
+                            None => return Err("Couldnt parse expires_at parameter: and_hms_opt(0, 0, 0) return None".to_string()),
+                            Some(t) => t,
+                        },
                         Err(e) => {
                             return Err(format!("Couldnt parse expires_at parameter: {}", e));
                         }
