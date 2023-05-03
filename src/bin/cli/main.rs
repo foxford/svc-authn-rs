@@ -136,10 +136,12 @@ fn verify(token: &str, config: &CliConfig) -> Result<(), String> {
             .expiration_time()
             .ok_or_else(|| format!("Absent expiration date: {:?}", valid_token.claims))?;
         let expires_at = match Utc.timestamp_opt(expires_at as i64, 0) {
-            LocalResult::None => return Err(
-                "Utc.timestamp_opt Err: out-of-range number of seconds and/or invalid nanosecond"
-                    .to_string(),
-            ),
+            LocalResult::None => {
+                return Err(format!(
+                    "Utc.timestamp_opt: out-of-range number of seconds {}",
+                    expires_at
+                ))
+            }
             LocalResult::Ambiguous(_, _) => {
                 return Err(
                     "Utc.timestamp_opt Err: unexpected result LocalResult::Ambiguous".to_string(),
