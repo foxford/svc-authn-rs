@@ -20,7 +20,7 @@ cli = ["dirs", "jose", "structopt", "toml", "atty", "serde_json", "config"]
 atty = { version = "0.2", optional = true }
 chrono = { version = "0.4", features = ["serde"], optional = true }
 config = { version = "0.13", optional = true }
-diesel = { version = "1", features = ["postgres"], optional = true }
+diesel = { version = "2", features = ["postgres"], optional = true }
 dirs = { version = "5", optional = true }
 http = { version = "0.2", optional = true }
 jsonwebtoken = { version = "7", optional = true }

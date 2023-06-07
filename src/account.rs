@@ -8,7 +8,7 @@ use crate::Error;
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 #[cfg_attr(feature = "diesel", derive(FromSqlRow, AsExpression))]
-#[cfg_attr(feature = "diesel", sql_type = "sql::Account_id")]
+#[cfg_attr(feature = "diesel", diesel(sql_type = sql::Account_id))]
 #[cfg_attr(feature = "sqlx", derive(sqlx::Type))]
 #[cfg_attr(feature = "sqlx", sqlx(type_name = "account_id"))]
 pub struct AccountId {
@@ -76,27 +76,27 @@ pub mod jose {
 
 #[cfg(feature = "diesel")]
 pub mod sql {
+    use diesel::backend::Backend;
     use diesel::deserialize::{self, FromSql};
     use diesel::pg::Pg;
     use diesel::serialize::{self, Output, ToSql, WriteTuple};
     use diesel::sql_types::{Record, Text};
-    use std::io::Write;
 
     use super::AccountId;
 
     #[derive(SqlType, QueryId)]
-    #[postgres(type_name = "account_id")]
+    #[diesel(postgres_type(name = "account_id"))]
     #[allow(non_camel_case_types)]
     pub struct Account_id;
 
     impl ToSql<Account_id, Pg> for AccountId {
-        fn to_sql<W: Write>(&self, out: &mut Output<W, Pg>) -> serialize::Result {
+        fn to_sql(&self, out: &mut Output<Pg>) -> serialize::Result {
             WriteTuple::<(Text, Text)>::write_tuple(&(&self.label, &self.audience), out)
         }
     }
 
     impl FromSql<Account_id, Pg> for AccountId {
-        fn from_sql(bytes: Option<&[u8]>) -> deserialize::Result<Self> {
+        fn from_sql(bytes: <Pg as Backend>::RawValue<'_>) -> deserialize::Result<Self> {
             let (label, audience): (String, String) =
                 FromSql::<Record<(Text, Text)>, Pg>::from_sql(bytes)?;
             Ok(AccountId::new(&label, &audience))
